@@ -46,10 +46,16 @@ get_ward <- function(long, lat) {
   return(ward)
 }
 
+# Takes a long time to run! About 5 to 10 minutes in my machine
 cleaned_dinesafe_data <- cleaned_dinesafe_data |> 
   mutate(ward = Map(get_ward, Longitude, Latitude)) |>
   mutate(ward = sapply(ward, function(x) as.numeric(x[[1]]))) |>
-  mutate(ward_income = sapply(ward, function(x) median_income_ward[x]))
+  mutate(median_ward_income = sapply(ward, function(x) as.numeric(median_income_ward[x]))) |>
+  select(dinesafe_infraction = Severity, ward, median_ward_income)
 
 #### Save data ####
+write_csv(
+  x = cleaned_dinesafe_data,
+  file = "outputs/data/cleaned_dinesafe_data.csv"
+)
 

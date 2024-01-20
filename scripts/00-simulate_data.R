@@ -13,23 +13,43 @@ library(tidyverse)
 #### Simulate data ####
 # set seed
 set.seed(302)
+
+possible_infractions <- c(
+  "NA",
+  "Significant",
+  "Cruicial",
+  "Minor"
+)
+
+ward_income_sim <- sample(30000:90000, 25, replace = TRUE)
+
+n_sample = 100
 simulated_data <- tibble(
-  ward = 1:25,
-  ward_income = sample(1:100000, 25, replace = TRUE),
-  dinesafe_infraction_ratio = rbeta(25, shape1 = 2, shape2 = 6)
+  infraction = sample(possible_infractions, n_sample, replace = TRUE),
+  ward = sample(1:25, n_sample, replace = TRUE),
+  ward_income = sample(ward_income_sim, n_sample, replace = TRUE)
 )
 
 #### Test data ####
 # Type check
 simulated_data$ward |> is.numeric()
 simulated_data$ward_income |> is.numeric()
-simulated_data$dinesafe_infraction_ratio |> is.numeric()
+simulated_data$infraction |> is.character()
 
 # Bound check
 simulated_data$ward |> min() >= 1
 simulated_data$ward_income |> min() >= 0
-simulated_data$dinesafe_infraction_ratio |> min() >= 0
 
 simulated_data$ward |> max() <= 25  # Only 25 wards in Toronto
-simulated_data$dinesafe_infraction_ratio |> max() <= 1
+
+# possible values check
+# check whether all infractions are in the possible infraction values
+simulated_data$infraction |>
+  is.element(possible_infractions) |>
+  all()
+
+# check whether wards are all contained within 1 to 25 (all wards in toronto)
+simulated_data$ward |>
+  is.element(1:25) |>
+  all()
 
