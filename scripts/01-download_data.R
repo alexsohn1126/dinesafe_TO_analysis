@@ -1,5 +1,5 @@
 #### Preamble ####
-# Purpose: Downloads and saves the data from opendatatoronto
+# Purpose: Downloads and saves the relavent data from opendatatoronto
 # Author: Moohaeng Sohn
 # Date: 19 Jan 2024
 # Contact: alex.sohn@mail.utoronto.ca

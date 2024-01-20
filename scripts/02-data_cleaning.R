@@ -1,44 +1,55 @@
 #### Preamble ####
-# Purpose: Cleans the raw plane data recorded by two observers..... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 6 April 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
+# Purpose: Cleans and combines raw ward map, dinesafe, and ward income data to one csv
+# Author: Moohaeng Sohn
+# Date: Jan 19, 2024
+# Contact: alex.sohn@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Pre-requisites: Run 01-download_data.R and download required libraries
 
 #### Workspace setup ####
 library(tidyverse)
+library(openxlsx)
+library(sf)
 
 #### Clean data ####
-raw_data <- read_csv("inputs/data/plane_data.csv")
+# load all 3 datasets
+ward_map <- st_read("inputs/data/ward_map_data.geojson")
+raw_dinesafe_data <- read_csv("inputs/data/raw_dinesafe_data.csv")
+raw_ward_data <- read.xlsx("inputs/data/raw_ward_data.xlsx")
 
-cleaned_data <-
-  raw_data |>
-  janitor::clean_names() |>
-  select(wing_width_mm, wing_length_mm, flying_time_sec_first_timer) |>
-  filter(wing_width_mm != "caw") |>
-  mutate(
-    flying_time_sec_first_timer = if_else(flying_time_sec_first_timer == "1,35",
-                                   "1.35",
-                                   flying_time_sec_first_timer)
-  ) |>
-  mutate(wing_width_mm = if_else(wing_width_mm == "490",
-                                 "49",
-                                 wing_width_mm)) |>
-  mutate(wing_width_mm = if_else(wing_width_mm == "6",
-                                 "60",
-                                 wing_width_mm)) |>
-  mutate(
-    wing_width_mm = as.numeric(wing_width_mm),
-    wing_length_mm = as.numeric(wing_length_mm),
-    flying_time_sec_first_timer = as.numeric(flying_time_sec_first_timer)
-  ) |>
-  rename(flying_time = flying_time_sec_first_timer,
-         width = wing_width_mm,
-         length = wing_length_mm
-         ) |> 
-  tidyr::drop_na()
+# get properties for each area id in ward_map
+ward_map_properties <- as_tibble(ward_map)
+
+# filter xlsx to the data we want (median household for each ward)
+median_income_ward <- raw_ward_data |>
+  filter(City.of.Toronto.Profiles == "Median total income of households in 2020 ($)") |>
+  unlist() |>
+  unname() |>
+  tail(-2)
+
+# select relavent dinesafe data columns and convert
+# (infraction) Severity to NA that is a string "NA - Not Applicable"
+cleaned_dinesafe_data <- raw_dinesafe_data |>
+  select(Severity, Latitude, Longitude) |>
+  mutate(Severity = na_if(Severity, "NA - Not Applicable"))
+
+# Mark each dinesafe inspections with a ward using longitude and latitude and ward map data
+get_ward <- function(long, lat) {
+  point <- st_point(c(long, lat))
+  id <- st_within(point, ward_map)[[1]]
+  if(!any(id)){
+    return("-1")
+  }
+  ward <- ward_map_properties |>
+    filter(X_id == id) |>
+    pull(AREA_SHORT_CODE)
+  return(ward)
+}
+
+cleaned_dinesafe_data <- cleaned_dinesafe_data |> 
+  mutate(ward = Map(get_ward, Longitude, Latitude)) |>
+  mutate(ward = sapply(ward, function(x) as.numeric(x[[1]]))) |>
+  mutate(ward_income = sapply(ward, function(x) median_income_ward[x]))
 
 #### Save data ####
-write_csv(cleaned_data, "outputs/data/analysis_data.csv")
+
