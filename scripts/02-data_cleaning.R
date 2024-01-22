@@ -1,7 +1,7 @@
 #### Preamble ####
 # Purpose: Cleans and combines raw ward map, dinesafe, and ward income data to one csv
 # Author: Moohaeng Sohn
-# Date: Jan 19, 2024
+# Date: 21 Jan, 2024
 # Contact: alex.sohn@mail.utoronto.ca
 # License: MIT
 # Pre-requisites: Run 01-download_data.R and download required libraries
@@ -25,33 +25,36 @@ median_income_ward <- raw_ward_data |>
   filter(City.of.Toronto.Profiles == "Median total income of households in 2020 ($)") |>
   unlist() |>
   unname() |>
-  tail(-2)
-
-# select relavent dinesafe data columns and convert
-# (infraction) Severity to NA that is a string "NA - Not Applicable"
-cleaned_dinesafe_data <- raw_dinesafe_data |>
-  select(Severity, Latitude, Longitude) |>
-  mutate(Severity = na_if(Severity, "NA - Not Applicable"))
+  tail(-2) # Don't want first 2 columns
 
 # Mark each dinesafe inspections with a ward using longitude and latitude and ward map data
 get_ward <- function(long, lat) {
+  # fine which shape id this longitude latitude combo lays in
   point <- st_point(c(long, lat))
   id <- st_within(point, ward_map)[[1]]
+  
+  # if cannot find id, throw an error: https://stackoverflow.com/a/35463249
   if(!any(id)){
-    return("-1")
+    stop("Could not find a ward for a restaurant")
   }
+  
+  # get ward area number using id
   ward <- ward_map_properties |>
     filter(X_id == id) |>
     pull(AREA_SHORT_CODE)
   return(ward)
 }
 
+# Select relavent dinesafe data columns and convert (infraction) Severity to NA that is a string "NA - Not Applicable"
+# Put each inspection into their respective wards and also add ward income
 # Takes a long time to run! About 5 to 10 minutes in my machine
-cleaned_dinesafe_data <- cleaned_dinesafe_data |> 
+cleaned_dinesafe_data <- raw_dinesafe_data |>
+  mutate(Severity = na_if(Severity, "NA - Not Applicable")) |>
   mutate(ward = Map(get_ward, Longitude, Latitude)) |>
   mutate(ward = sapply(ward, function(x) as.numeric(x[[1]]))) |>
   mutate(median_ward_income = sapply(ward, function(x) as.numeric(median_income_ward[x]))) |>
-  select(dinesafe_infraction = Severity, ward, median_ward_income)
+  mutate(dinesafe_infraction = as.character(Severity)) |>
+  select(restaurant = Establishment.Name, dinesafe_infraction, ward, median_ward_income)
 
 #### Save data ####
 write_csv(

@@ -1,7 +1,7 @@
 #### Preamble ####
 # Purpose: Simulates income and percent of restaurants with dinesafe infractions in Toronto
 # Author: Moohaeng Sohn
-# Date: 19 Jan 2024
+# Date: 21 Jan, 2024
 # Contact: alex.sohn@mail.utoronto.ca
 # License: MIT
 # Pre-requisites: Install tidyverse
@@ -14,17 +14,28 @@ library(tidyverse)
 # set seed
 set.seed(302)
 
+# Possible infraction values
 possible_infractions <- c(
-  "NA",
-  "Significant",
-  "Cruicial",
-  "Minor"
+  NA,
+  "S - Significant",
+  "C - Crucial",
+  "M - Minor"
+)
+
+# Make up some names
+restaurants <- c(
+  "Alex's Restaurant",
+  "Mcdoggies",
+  "Cooking food with STA302",
+  "Pain and Suffering",
+  "Existential Crisis"
 )
 
 ward_income_sim <- sample(30000:90000, 25, replace = TRUE)
 
 n_sample = 100
 simulated_data <- tibble(
+  restaurant = sample(restaurants, n_sample, replace = TRUE),
   infraction = sample(possible_infractions, n_sample, replace = TRUE),
   ward = sample(1:25, n_sample, replace = TRUE),
   ward_income = sample(ward_income_sim, n_sample, replace = TRUE)
@@ -32,6 +43,7 @@ simulated_data <- tibble(
 
 #### Test data ####
 # Type check
+simulated_data$restaurant |> is.character()
 simulated_data$ward |> is.numeric()
 simulated_data$ward_income |> is.numeric()
 simulated_data$infraction |> is.character()

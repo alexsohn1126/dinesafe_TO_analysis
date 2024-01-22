@@ -1,5 +1,5 @@
 ---
-title: "A study of relationship between neighbourhood income and DineSafe infractions"
+title: "Do Restaurants in A study of relationship between neighbourhood income and DineSafe infractions"
 author: "Moohaeng Sohn"
 thanks: "Code and data are available at: [https://github.com/alexsohn1126/fire_and_income_toronto](https://github.com/alexsohn1126/fire_and_income_toronto)"
 date: today
@@ -9,54 +9,125 @@ format: pdf
 number-sections: true
 toc: true
 bibliography: references.bib
+editor_options: 
+  chunk_output_type: inline
 ---
 
-```{r}
+```{r, setup}
 #| include: false
 #| warning: false
 #| message: false
 
 library(tidyverse)
+library(here)
+library(kableExtra)
+library(sf)
+
+# Load clean dataset
+clean_dataset <- read_csv(here("outputs/data/cleaned_dinesafe_data.csv"))
+
+# Load ward map
+ward_map <- st_read(here("inputs/data/ward_map_data.geojson"))
 ```
 
 
 # Introduction
+Toronto is a city bustling with many different cultures mixed together. With many cultures, there are many restaurants in toronto. In GTA, there are around 17000 restaurants that are operating. Restaurants give the owners ability to express their cultural and culinary creativity to almost 30 million people of Toronto, and more to those who comes from outside of the city. Being a cultural hub and home to a variety of restaurants also mean it is a challenge to keep a consistent health standard for every restaurant. And the number of restaurants growing [TODO:ADD CITATION], Toronto needed a system to keep all the restaurants safe for the customers to eat in.
 
-Restaurants and dining out are one of the largest spending factor for canadians after rent [TODO:add source for this claim]
+Dinesafe program is ran by Toronto Public Health, and it runs randomized inspections for restaurants or any establishments that serve food to the general public. Dinesafe inspections occur anywhere from once per year to 3 times per year, depending on whether the establishment is serving food that can possibly carry pathogenic organisms, or is serving food to a population that is high risk, such as hospital patients [TODO:ADD CITATION]. There are 3 possible results to a Dinesafe inspection. One can get a PASS, which indicate no or only minor infractions were found, or a CONDITIONAL PASS, meaning one or more significant infraction was observed, or a CLOSED, meaning one or more crucial infractions were found. For example, if an establishment were found to have 2 minor infractions and 1 crucial infraction, then they will be notified to close the establishment until the issue is fixed. Until a PASS re-inspection, they cannot reopen the establishment. Conditional pass means the establishment will be revisited in the near future, and all of the significant infractions must be fixed by then. These notices must be posted near the entrance of the restaurant, visible for anyone who enters the premise [TODO: ADD CITATION].
 
-The remainder of this paper is structured as follows. @sec-data....
-
+In this paper, we will analyze Dinesafe inspection data to see whether there are correlating factors which play into the inspection result of these establishments. This paper will be organized into these following sections: Data, Results, Discussion, and Conclusion. Data section will focus on how the data was obtained and what steps we took to clean the data. Results section will use the data and use various graphs and tables to showcase our data. Discussion section will point out our findings and how we performed the analysis, and the possible shortcomings for the analysis we have done.
 
 
 # Data {#sec-data}
 
-Some of our data is of penguins (@fig-bills), from @palmerpenguins.
+All data was obtained by using Toronto's `opendatatoronto` R library [TODO: CITE OPENDATATORONTO]. Toronto hosts its open data portal [website](https://open.toronto.ca/), where everyone can search and explore hundreds of datasets related to Toronto. We can use R statistical programming language [TODO: CITE R HERE] with `opendatatoronto` library to download the dataset into R directly. We used R statistiacl programming language [TODO: CITE R HERE] along with `openxlsx` [TODO: CITE openxlsx], `tidyverse` [TODO: CITE TIDYVERSE], `sf` [TODO: CITE sf] , `here` [TODO: CITE here], `kableExtra` [TODO: CITE KABLEEXTRA] libraries to help save and process the raw data. All the code was written within RStudio [TODO: CITE RSTUDIO].
+
+## Dinesafe Data
+
+Dinesafe dataset is published by Toronto Public Health (or TPH) [TODO: CITE TPH]. This dataset contains every inspection results, such as the location of the establishment in longitude and latitude, infraction severity (if any), and the date which the inspection was performed. There are around 77000 rows, meaning there are 77000 inspection which we can analyze over as of January 21st, 2024. This dataset is updated daily. The date when the raw data was obtained for the project was on January 21st, 2024, and open data portal states that the dataset was last refreshed on Janurary 21st, 2024. The data was given in a csv file, and we used `write_csv` function to save the raw data.
+
+## Ward Bounds Data
+
+City of Toronto is divided into 25 wards as of January 21st, 2024. This dataset is a map of all the wards in the City of Toronto, and is published by the City Clerk's Office. It is updated semi-annually, and was last updated on Jan 1st, 2024. This map data was given in a geojson format. The dataset allows us to query location with a longitude and a latitude and let us see which ward that location is in. We use this data to query which ward this establishment was located in. Details on how this was done will be in @sec-combining-datasets. A sample of what Ward Bounds data looks like is shown in @fig-ward-map-visualization.
+
+\newpage
+
+## Ward Profile Data
+
+This dataset contains 2021 Census data and summarizes them into 25 wards. This dataset was last refreshed on Jan 3rd, 2024, and was accessed for use on Jan 21st, 2024. We will only be using the Median income of the wards from this dataset.
+
+## Combining and Cleaning Datasets {#sec-combining-datasets}
+
+There are a lot of detailed information which we do not need for our purposes. We only want restaurant's name, severity of infractions, the ward where the restaurant is located in, and that ward's median income. To do this, we first use `filter` function from `tidyverse` [TODO: CITE TIDYVERSE] on the ward census dataset to filter out the row which contained median income for each ward, and save it as a vector so the first element is the median income for ward 1, and second element for ward 2 and so on. This allows us to simply query what the median income is for a certain ward. We also make a custom function which will take in coordinate and spits out which ward the coordinate is located in. 
+
+Using these two things, we can start assembling our final dataset. First, we observed that some inspection's severity was marked as "`NA - Not Applicable`", and some were values `NA` which means that cell is completely empty. We keep the consistency by using the `mutate` function and changing every occurrence of "`NA - Not Applicable`" to `NA`. We use `mutate` again to add a `ward` column to the table, using `Map` function to apply the ward-finding function for each row's longitude-latitude combo. Then, using the median income info, we add another column using `mutate` to add in that ward's median income for every row. Then, we use the `select` function to select only the columns we want and save the cleaned data into a csv. @fig-sample-cleaned-dataset is a sample of the cleaned dataset.
+
+# Results
+
+## Dinesafe Data
+
+When we obtained the Dinesafe dataset (Jan 21st, 2024), there are 76,827 Dinesafe inspections across 13,936 different restaurants. Of those inspections, 32,227 inspections did not have any infractions, meaning around 42% of inspections passed without minor, significant, or crucial infractions. Out of 13,936 restaurants, about 6057 restaurants did not have any infractions, 2816 had Minor infractions at worst, 38
+
+
+
 
 ```{r}
-#| label: fig-bills
-#| fig-cap: Bills of penguins
-#| echo: false
-
-
-```
-
-Talk more about it.
-
-And also planes (@fig-planes). (You can change the height and width, but don't worry about doing that until you have finished every other aspect of the paper - Quarto will try to make it look nice and the defaults usually work well once you have enough text.)
-
-```{r}
-#| label: fig-planes
-#| fig-cap: Relationship between wing length and width
+#| label: fig-restaurants-infractin-ratio
+#| fig-cap: Count and Percentage of Different Worst Infraction by Restaurant
 #| echo: false
 #| warning: false
 #| message: false
 
+cuts_chr <- c(
+  "0% to 9%",
+  "10% to 19%",
+  "20% to 29%",
+  "30% to 39%",
+  "40% to 49%",
+  "50% to 59%",
+  "60% to 69%",
+  "70% to 79%",
+  "80% to 89%",
+  "90% to 100%"
+)
+infractions_per_restaurant <-clean_dataset |>
+  group_by(restaurant) |>
+  summarize(
+    minor_infractions = any(dinesafe_infraction == "M - Minor"),
+    significant_infractions = any(dinesafe_infraction == "S - Significant"),
+    cruicial_infractions = any(dinesafe_infraction == "C - Crucial")
+  ) |>
+  mutate_all(~replace(., is.na(.), FALSE))
 
+n <- nrow(infractions_per_restaurant)
+mi <- infractions_per_restaurant$minor_infractions
+si <- infractions_per_restaurant$significant_infractions
+cr <- infractions_per_restaurant$cruicial_infractions
+
+totals <- tibble(
+  smt = c("Count", "Percentage"),
+  all_restaurants = c(n, "100%"),
+  no_infraction = c(sum(!mi & !si & !cr), paste(round(sum(!mi & !si & !cr) / n * 100, digits = 2), "%")),
+  minor_infraction = c(sum(mi & !si & !cr), paste(round(sum(mi & !si & !cr) / n * 100, digits = 2), "%")),
+  sig_infraction = c(sum(si & !cr), paste(round(sum(si & !cr) / n * 100, digits = 2), "%")),
+  cruicial_infraction = c(sum(cr), paste(round(sum(cr) / n * 100, digits = 2), "%"))
+) 
+  
+
+kable(
+  totals,
+  col.names = c(
+    "",
+    "All Restaurants",
+    "No Infractions",
+    "Minor Infraction at worst",
+    "Significant Infraction at worst",
+    "Cruicial Infraction at worst"
+  )
+) |>
+  column_spec(column = 2:6, width = "5em")
 ```
-
-Talk way more about it. 
-
-
 
 
 # Discussion
@@ -79,8 +150,43 @@ Weaknesses and next steps should also be included.
 
 # Appendix {-}
 
+# Ward Map Visualization
+```{r}
+#| label: fig-ward-map-visualization
+#| fig-cap: Visualization of Ward Map Data
+#| echo: false
+#| results: false
+#| warning: false
+#| message: false
 
-# Additional data details
+ggplot() +
+  theme_classic() +
+  geom_sf(data = ward_map) +
+  labs(
+    x = "Longitude",
+    y = "Latitude"
+  )
+```
+
+# Cleaned Data Sample
+
+```{r}
+#| label: fig-sample-cleaned-dataset
+#| fig-cap: First Few Rows of the Cleaned Dataset
+#| echo: false
+#| warning: false
+#| message: false
+
+kable(
+  head(clean_dataset),
+  col.names = c(
+    "Restaurant",
+    "Dinesafe Infraction",
+    "Ward",
+    "Ward Median Income"
+  )
+)
+```
 
 
 \newpage
