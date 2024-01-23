@@ -50,11 +50,10 @@ get_ward <- function(long, lat) {
 # Takes a long time to run! About 5 to 10 minutes in my machine
 cleaned_dinesafe_data <- raw_dinesafe_data |>
   mutate(Severity = na_if(Severity, "NA - Not Applicable")) |>
-  mutate(ward = Map(get_ward, Longitude, Latitude)) |>
-  mutate(ward = sapply(ward, function(x) as.numeric(x[[1]]))) |>
-  mutate(median_ward_income = sapply(ward, function(x) as.numeric(median_income_ward[x]))) |>
-  mutate(dinesafe_infraction = as.character(Severity)) |>
-  select(restaurant = Establishment.Name, dinesafe_infraction, ward, median_ward_income)
+  mutate(ward = Map(get_ward, Longitude, Latitude)) |>            # Map Longitude, latitude combo into get_ward func
+  mutate(ward = sapply(ward, function(x) as.numeric(x[[1]]))) |>  # Convert ward into numeric
+  mutate(median_ward_income = sapply(ward, function(x) as.numeric(median_income_ward[x]))) |>   # Convert median income into numeric based on ward
+  select(restaurant = Establishment.Name, dinesafe_infraction = Severity, ward, median_ward_income)
 
 #### Save data ####
 write_csv(
