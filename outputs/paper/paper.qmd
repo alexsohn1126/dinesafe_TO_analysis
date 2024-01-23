@@ -21,6 +21,7 @@ editor_options:
 library(tidyverse)
 library(here)
 library(kableExtra)
+library(patchwork)
 library(sf)
 
 # Load clean dataset
@@ -41,7 +42,7 @@ In this paper, we will analyze Dinesafe inspection data to see whether there are
 
 # Data {#sec-data}
 
-All data was obtained by using Toronto's `opendatatoronto` R library [TODO: CITE OPENDATATORONTO]. Toronto hosts its open data portal [website](https://open.toronto.ca/), where everyone can search and explore hundreds of datasets related to Toronto. We can use R statistical programming language [TODO: CITE R HERE] with `opendatatoronto` library to download the dataset into R directly. We used R statistiacl programming language [TODO: CITE R HERE] along with `openxlsx` [TODO: CITE openxlsx], `tidyverse` [TODO: CITE TIDYVERSE], `sf` [TODO: CITE sf] , `here` [TODO: CITE here], `kableExtra` [TODO: CITE KABLEEXTRA] libraries to help save and process the raw data. All the code was written within RStudio [TODO: CITE RSTUDIO].
+All data was obtained by using Toronto's `opendatatoronto` R library [TODO: CITE OPENDATATORONTO]. Toronto hosts its open data portal [website](https://open.toronto.ca/), where everyone can search and explore hundreds of datasets related to Toronto. We can use R statistical programming language [TODO: CITE R HERE] with `opendatatoronto` library to download the dataset into R directly. We used R statistiacl programming language [TODO: CITE R HERE] along with `openxlsx` [TODO: CITE openxlsx], `tidyverse` [TODO: CITE TIDYVERSE], `sf` [TODO: CITE sf] , `here` [TODO: CITE here], `kableExtra` [TODO: CITE KABLEEXTRA],  `patchwork` [TODO: CITE PATCHWORK] libraries to help save and process the raw data. All the code was written within RStudio [TODO: CITE RSTUDIO].
 
 ## Dinesafe Data
 
@@ -65,16 +66,13 @@ Using these two things, we can start assembling our final dataset. First, we obs
 
 # Results
 
-## Dinesafe Data
+## Worst Dinesafe Infraction Per Restaurant
 
-When we obtained the Dinesafe dataset (Jan 21st, 2024), there are 76,827 Dinesafe inspections across 13,936 different restaurants. Of those inspections, 32,227 inspections did not have any infractions, meaning around 42% of inspections passed without minor, significant, or crucial infractions. Out of 13,936 restaurants, about 6057 restaurants did not have any infractions, 2816 had Minor infractions at worst, 38
-
-
-
+When we obtained the Dinesafe dataset (Jan 21st, 2024), there are 76,827 Dinesafe inspections across 13,936 different restaurants. Of those inspections, 32,227 inspections did not have any infractions, meaning around 42% of inspections passed without minor, significant, or crucial infractions. Out of 13,936 restaurants, about 6,057 restaurants did not have any infractions, 2,816 had Minor infractions at worst, 3,872 had Significant infractions at worst, and 1,191 restaurants had crucial infractions. @Tbl-restaurants-infractin-ratio shows this with the percentages compared to all restaurants. On average, there were 3.2 total infractions, 2.01 minor infractions, 1.03 significant infractions, 0.157 crucial infractions per restaurant. The standard deviation for average number of all infractions is 2.57.
 
 ```{r}
-#| label: fig-restaurants-infractin-ratio
-#| fig-cap: Count and Percentage of Different Worst Infraction by Restaurant
+#| label: tbl-restaurants-infractin-ratio
+#| tbl-cap: Count and Percentage of Different Worst Infraction by Restaurant
 #| echo: false
 #| warning: false
 #| message: false
@@ -130,15 +128,178 @@ kable(
 ```
 
 
+## Dinesafe Infractions Per Ward
+
+We can use `sf` package to visualize what percentage of inspections led to an infraction for each ward. Ward Eglinton-Lawrence (Ward 8) had the highest rate of all infractions, nearly 81% of inspection leading into some kind of infraction. Etobicoke-Lakeshore (Ward 3) had the lowest rate of all infractions, only 34% of all inspections having an infraction. As for Minor infractions, Eglinton-Lawrence had the highest rate, 49% of inspections leading to a minor infraction, and Scarborough-Rouge Park (Ward 25) had the lowest rate with 21% of inspections observing a minor infraction. For Significant infractions, Eglinton-Lawrence had the highest rate with 27%, and Etobicoke-Lakeshore had the lowest with 7%. Lastly, Scarborough North (Ward 23) had the highest rate of crucial infractions with 5.8%, and Etobicoke Centre (Ward 2) had the lowest rate of crucial infraction with 0.8%. Refer to @fig-infractions-per-ward for a map visualizing this data.
+
+```{r}
+#| label: fig-infractions-per-ward
+#| fig-cap: Infraction Percentage for Each Ward
+#| fig-height: 8
+#| echo: false
+#| warning: false
+#| message: false
+
+# summarize percentage of infractions by ward 
+ward_summary <- clean_dataset |>
+  group_by(ward) |>
+  summarize(
+    all_infractions_ratio = mean(!is.na(dinesafe_infraction)),
+    minor_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "M - Minor"),
+    sig_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "S - Significant"),
+    crucial_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "C - Crucial")
+  ) |>
+  mutate(ward = sprintf("%02d", ward)) # https://stackoverflow.com/a/8267036
+
+# merge it with wardmap
+combined <- merge(ward_map, ward_summary, by.x = "AREA_SHORT_CODE", by.y = "ward")
+
+all <- ggplot(combined) +
+  geom_sf(aes(fill = all_infractions_ratio)) +
+  theme_minimal() + 
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(size = 10)) +
+  labs(title = "All Infractions", fill = "Infraction Ratio")
+
+minor <- ggplot(combined) +
+  geom_sf(aes(fill = minor_infractions_ratio)) +
+  theme_minimal() + 
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(size = 10)) +
+  labs(title = "Minor Infractions", fill = "Infraction Ratio")
+
+sig <- ggplot(combined) +
+  geom_sf(aes(fill = sig_infractions_ratio)) +
+  theme_minimal() + 
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(size = 10)) +
+  labs(title = "Significant Infractions", fill = "Infraction Ratio")
+
+crucial <- ggplot(combined) +
+  geom_sf(aes(fill = crucial_infractions_ratio)) +
+  theme_minimal() + 
+  theme(axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(size = 10)) +
+  labs(title = "Crucial Infractions", fill = "Infraction Ratio")
+
+wrap_plots(all, minor, sig, crucial, ncol = 1, widths = c(2))
+```
+
+## Dinesafe Infractions Versus Ward Income
+
+We created @fig-infractions-vs-ward-income to see whether there are any relationship between infraction occurrence rate and ward income, but there doesn't seem to be a clear trend for all 4 scatter plots which highlight all, minor, significant, and crucial infraction rates versus ward income for which those infractions were found at. @Tbl-income-infraction-correlation contains the correlation between ward income and various infraction types, and it shows very little correlation, strongest correlation coefficient being 0.15. 
+
+\newpage
+
+```{r}
+#| label: fig-infractions-vs-ward-income
+#| fig-cap: Median Ward Household Income Vs. Infractions Ratio Varying In Severity
+#| fig-height: 8
+#| fig-width: 8
+#| echo: false
+#| warning: false
+#| message: false
+
+median_ward_summary <- clean_dataset |>
+  group_by(ward, median_ward_income) |>
+  summarize(
+    all_infractions_ratio = mean(!is.na(dinesafe_infraction)),
+    minor_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "M - Minor"),
+    sig_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "S - Significant"),
+    crucial_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "C - Crucial")
+  )
+
+make_median_ward_plot <- function(infraction_type, nudgex, nudgey) {
+  new_plot <- median_ward_summary |>
+    ggplot(
+    aes(x = median_ward_income,
+        y = {{infraction_type}},
+        options(scipen=999),
+        label = ward)
+    ) +
+    geom_point() +
+    geom_smooth(method=lm, se=FALSE, color = "red") #https://www.statology.org/line-of-best-fit-in-r/
+    
+  return(new_plot)
+}
+
+pa <- make_median_ward_plot(all_infractions_ratio, 0.015, 0.015) + 
+  labs(
+    title = "All Infractions Rate",
+    x = "Median Ward Income",
+    y = "All Infractions Rate"
+  )
+pm <- make_median_ward_plot(minor_infractions_ratio, 0.02, 0.01) + 
+  labs(
+    title = "Minor Infractions Rate",
+    x = "Median Ward Income",
+    y = "Minor Infractions"
+  )
+ps <- make_median_ward_plot(sig_infractions_ratio, 0.005, 0.005) + 
+  labs(
+    title = "Significant Infractions Rate",
+    x = "Median Ward Income",
+    y = "Significant Infractions"
+  )
+pc <- make_median_ward_plot(crucial_infractions_ratio, 0.0015, 0.0015) + 
+  labs(
+    title = "Crucial Infractions Rate",
+    x = "Median Ward Income",
+    y = "Crucial Infractions"
+  )
+pa + pm + ps + pc + plot_layout(widths = c(2, 2))
+```
+
+```{r}
+#| label: tbl-income-infraction-correlation
+#| tbl-cap: Correlation of Income and Various Infractions
+#| echo: false
+#| warning: false
+#| message: false
+
+median_ward_summary <- clean_dataset |>
+  group_by(ward, median_ward_income) |>
+  summarize(
+    all_infractions_ratio = mean(!is.na(dinesafe_infraction)),
+    minor_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "M - Minor"),
+    sig_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "S - Significant"),
+    crucial_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "C - Crucial")
+  )
+
+median_ward_correlation_data <- tibble(
+  infractions = c("All Infraction", "Minor Infraction", "Significant Infraction", "Crucial Infraction"),
+  correlations = c(cor(median_ward_summary$median_ward_income, median_ward_summary$all_infractions_ratio),
+                   cor(median_ward_summary$median_ward_income, median_ward_summary$minor_infractions_ratio),
+                   cor(median_ward_summary$median_ward_income, median_ward_summary$sig_infractions_ratio),
+                   cor(median_ward_summary$median_ward_income, median_ward_summary$crucial_infractions_ratio))
+)
+
+kable(
+  median_ward_correlation_data  ,
+  col.names = c("Infraction type", "Correlation to ward Income")
+)
+```
+
 # Discussion
 
-## First discussion point {#sec-first-point}
+## Number of Restaurants with Dinesafe Infractions
+From @tbl-restaurants-infractin-ratio, we can observe that nearly 10% of all establishments in Toronto has caused at least one crucial infraction, meaning establishments would have to close until the problem was fixed. This is somewhat 
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+## Dinesafe Infraction and Wards
+Looking at maps from @fig-infractions-per-ward, there seems to be a some sort of trend of where there were the highest infractions rates. For all infraction, it seems like wards that are close to the center of Toronto has higher general infraction rate than the outer wards. This could possibly be that these establishments are actually causing more infractions, or it could be that inspectors in that area could be stricter than those inspectors who inspect establishments in the outer wards. Another possibility could be that there are not that many establishments which serve hazardous food, and those establishment which don't serve possibly hazardous food are not inspected to the same standard as those who do.
 
-## Second discussion point
+As we look at different infraction severities however, it seems like the east side of the city causes more severe infraction compared to the west side. One could interpret this as the wards in the east side causes less infractions, but each infractions are more severe in the east. 
 
-## Third discussion point
+## Dinesafe Infraction and Ward Income
+
 
 ## Weaknesses and next steps
 
