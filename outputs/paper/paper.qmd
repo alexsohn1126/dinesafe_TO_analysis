@@ -42,7 +42,7 @@ In this paper, we will analyze Dinesafe inspection data to see whether there are
 
 # Data {#sec-data}
 
-All data was obtained by using Toronto's `opendatatoronto` R library [@citeOpendatatoronto]. Toronto hosts its open data portal [website](https://open.toronto.ca/), where everyone can search and explore hundreds of datasets related to Toronto. We can use R statistical programming language [@citeR] with `opendatatoronto` library to download the datasets into R directly. We used R statistical programming language [@citeR] along with `openxlsx` [@citeOpenxlsx], `tidyverse` [@citeTidyverse], `sf` [@citeSf] , `here` [@citeHere], `knitr` [@citeKnitr],  `patchwork` [@citePatchwork] libraries to help save, process, then visualize the raw data. All the code was written within RStudio [@citeRstudio].
+All data was obtained by using Toronto's `opendatatoronto` R library [@citeOpendatatoronto]. Toronto hosts its open data portal [website](https://open.toronto.ca/), where everyone can search and explore hundreds of datasets related to Toronto. We can use R statistical programming language [@citeR] with `opendatatoronto` library to download the datasets into R directly. We used R statistical programming language [@citeR] along with `openxlsx` [@citeOpenxlsx], `tidyverse` [@citeTidyverse], `sf` [@citeSf] , `here` [@citeHere], `knitr` [@citeKnitr],  `patchwork` [@citePatchwork] libraries to help save, process, then visualize the raw data. All the code was written within RStudio [@citeRStudio].
 
 ## Dinesafe Data
 
