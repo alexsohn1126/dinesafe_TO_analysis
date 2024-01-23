@@ -296,14 +296,14 @@ From @tbl-restaurants-infractin-ratio, we can observe that nearly 10% of all est
 ## Dinesafe Infraction and Wards
 Looking at maps from @fig-infractions-per-ward, there seems to be a some sort of trend of where there were the highest infractions rates. For all infraction, it seems like wards that are close to the center of Toronto has higher general infraction rate than the outer wards. This could possibly be that these establishments are actually causing more infractions, or it could be that inspectors in that area could be stricter than those inspectors who inspect establishments in the outer wards. Another possibility could be that there are not that many establishments which serve hazardous food, and those establishment which don't serve possibly hazardous food are not inspected to the same standard as those who do.
 
-As we look at different infraction severities however, it seems like the east side of the city causes more severe infraction compared to the west side. One could interpret this as the wards in the east side causes less infractions, but each infractions are more severe in the east. 
+As we look at different infraction severities however, it seems like the east side of the city causes more severe infraction compared to the west side. One could interpret this as the wards in the east side causing less infractions in numbers, but each infractions are more severe in the east. 
 
 ## Dinesafe Infraction and Ward Income
 
 
 ## Weaknesses and next steps
 
-Weaknesses and next steps should also be included.
+Dinesafe inspections are done by numerous inspectors, and different inspectors will be better at pointing out infraction than others. This means using Dinesafe infractions to decide which restaurants are the cleanest, and which wards have the cleanest restaurants may not be the most appropriate. Not only that, there can be a seasonal difference too. For example, mice infestations are the most common during fall and winter season [TODO: ADD SOURCE HERE]. Meaning if an inspection was done in fall or winter rather than spring or summer, an establishment might have a higher chance of getting caught with mice infestation. Having any kind of mice infestation leads to a closed notice, as it is a crucial infraction [TODO: Add archive.org page about this]. 
 
 \newpage
 

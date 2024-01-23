@@ -17,4 +17,4 @@ The repo is structured as:
 
 ## LLM Usage
 
-No LLM was used in the process of writing this report.
+LLM (ChatGPT 3.5) was used to assist in coding portion of writing this paper. For a complete chat log, check `inputs/LLM/usage.txt`.
