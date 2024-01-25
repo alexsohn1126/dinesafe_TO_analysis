@@ -55,9 +55,11 @@ DineSafe dataset is published by Toronto Public Health (or TPH) [@citeTPHDineSaf
 
 City of Toronto is divided into 25 wards as of January 21st, 2024. This dataset is a map of all the wards in the City of Toronto, and is published by the City Clerk's Office. It is updated semi-annually, and was last updated on Jan 1st, 2024. This map data was given in a geojson format. The dataset allows us to query location with a longitude and a latitude and let us see which ward that location is in.
 
+It is important that we use 25 ward map, not a 44 ward map that is also available on `opendatatoronto` because 25 ward map is the most commonly used ever since it came into use in 2018 [@wardsToronto1]. There is also a 47 ward model, but it is very rarely used as it was not implemented, but it is still worth mentioning because it has been approved by the city council and there are 47 wards bounds data and profile data (which is the next section) [@47wards].
+
 ## Ward Profile Data
 
-This dataset contains 2011, 2016, and 2021 Census data and summarizes them into Toronto's 25 wards. This dataset was last refreshed on Jan 3rd, 2024, and was accessed for use on Jan 21st, 2024. We will only be using the Median household income of the wards from 2021 Census from this dataset. We decided to use 2021 Census data as it is the latest data available to us. Using older census data means we are using very recent DineSafe infraction data with misrepresented economic status of those wards. 
+This dataset contains 2011, 2016, and 2021 Census data and summarizes them into Toronto's 25 wards. This dataset was last refreshed on Jan 3rd, 2024, and was accessed for use on Jan 21st, 2024. We will only be using the Median household income of the wards from 2021 Census from this dataset. We decided to use 2021 Census data as it is the latest data available to us. Using older census data means we are using very recent DineSafe infraction data with misrepresented economic status of those wards. Again, we are using 25 ward version as it is the most up to date, and most commonly used. 
 
 ## Combined Data
 We combined DineSafe dataset and ward profile data to produce a combined dataset. The combined dataset contains these columns: establishment's name, DineSafe infraction severity, the ward which the establishment is located in, and median household income of that ward. @Tbl-sample-cleaned-dataset shows the first few rows of the cleaned dataset. We carry over the 76,827 inspections that we had from DineSafe dataset, except now we have more information about which ward the establishment is located, and the median income of that ward. The process that was used during the combining process is documented in @sec-combining-datasets.
@@ -253,9 +255,7 @@ pa + pm + ps + pc + plot_layout(widths = c(2, 2))
 
 # Results
 
-## Worst DineSafe Infraction Per Restaurant
-
-When we obtained the DineSafe dataset (Jan 21st, 2024), there are 76,827 DineSafe inspections across 13,936 different restaurants. Of those inspections, 32,227 inspections did not have any infractions, meaning around 42% of inspections passed without minor, significant, or crucial infractions. Out of 13,936 restaurants, about 6,057 restaurants did not have any infractions, 2,816 had Minor infractions at worst, 3,872 had Significant infractions at worst, and 1,191 restaurants had crucial infractions. @tbl-restaurants-infraction-ratio shows this with the percentages compared to all restaurants. On average, there were 3.2 total infractions, 2.01 minor infractions, 1.03 significant infractions, 0.157 crucial infractions per restaurant. The standard deviation for average number of all infractions is 2.57.
+When we obtained the DineSafe dataset (Jan 21st, 2024), there are 76,827 DineSafe inspections across 13,936 different restaurants. Of those inspections, 32,227 inspections did not have any infractions, meaning around 42% of inspections passed without minor, significant, or crucial infractions. Out of 13,936 restaurants, about 6,057 restaurants did not have any infractions, 2,816 had Minor infractions at worst, 3,872 had Significant infractions at worst, and 1,191 restaurants had crucial infractions. @tbl-restaurants-infraction-ratio shows this. On average, there were 3.2 total infractions, 2.01 minor infractions, 1.03 significant infractions, 0.157 crucial infractions per restaurant. The standard deviation for average number of all infractions is 2.57.
 
 ```{r}
 #| label: tbl-restaurants-infraction-ratio
@@ -303,11 +303,7 @@ kable(
 )
 ```
 
-
-
-
-
-
+We also observed little to no correlation between ward median houshold income and DineSafe infraction rate. This shows that perhaps DineSafe is doing a good job keeping the standard fairly even across the city. But we did observe that while wards in the central parts of the city commit the most infractions, the eastern wards seem to have the high crucial infraction rates, which are more severe, even getting close to being the highest crucial infraction rate ward. This could raise some questions as to whether this is caused by the actual physical location's properties such as climate, or outside factors such as how thorough the inspections are, and the types of establishments that are located in those areas.
 
 # Discussion
 
@@ -322,7 +318,7 @@ Looking at maps from @fig-infractions-per-ward, there seems to be a some sort of
 As we look at different infraction severities however, it seems like the east side of the city causes more severe infraction compared to the west side. One could interpret this as the wards in the east side causing less infractions in numbers, but each infractions are more severe in the east. Again, this could be linked to any of the reasons stated previously, or it could be that mice/insect infestations occur more frequently in the eastern region of the city. Or, it could be that establishments in the eastern region have older buildings which are vulnerable to insects and rodent infestation. 
 
 ## DineSafe Infraction and Ward Income
-There doesn't seem to be a clear correlation between DineSafe Infractions and a ward's median income. This is evident looking at @tbl-income-infraction-correlation and @fig-infractions-vs-ward-income, the correlation coefficient is positive or negative depending on which severity of infraction we look at, and the data points are very spread out. Therefore the ward's median income is not a good indicator of DineSafe infraction rates.
+There doesn't seem to be a clear correlation between DineSafe Infractions and a ward's median income. This is evident looking at @fig-infractions-vs-ward-income, the data points are very spread out, with no recognizable pattern. Therefore the ward's median income is not a good indicator of DineSafe infraction rates.
 
 We observed the relationship between the ward income and DineSafe infraction because we thought there would be higher end establishments which can afford more experienced staff and equipment to clean their establishments better, possibly passing more DineSafe inspections without infractions. Clearly this does not seem to be the case. It could be that wards are too big, and it includes too many neighbourhoods thus containing restaurants from many variety of quality. 
 
