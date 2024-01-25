@@ -1,10 +1,10 @@
 ---
-title: "Patterns for DineSafe Infractions in Various Toronto Wards: A Visual Analysis"
+title: "Restaurants in Eastern Toronto More Likely to Cause Severe DineSafe Infractions"
 author: "Moohaeng Sohn"
 thanks: "Code and data are available at: [https://github.com/alexsohn1126/fire_and_income_toronto](https://github.com/alexsohn1126/fire_and_income_toronto)"
 date: today
 date-format: long
-abstract: "Dinesafe is a program ran by Toronto Public Health which inspects establishments which serve and provide food. We found that there are more severe infractions in the eastern part of Toronto, but ward's income did not have any correlation to infraction rates. We used `opendatatoronto`'s datasets on Dinesafe inspections and ward related data, along with various `R` packages to organize and visualize data. This shows that some wards have higher infraction rate than other wards."
+abstract: "DineSafe is a program ran by Toronto Public Health which inspects establishments which serve and provide food. We found that there are more severe infractions in the eastern part of Toronto, but ward's income did not have any correlation to infraction rates. We used `opendatatoronto`'s datasets on DineSafe inspections and ward related data, along with various `R` packages to organize and visualize data. This insight could be a useful knowledge for consumers who are looking for a safe dining experience."
 format: pdf
 number-sections: true
 toc: true
@@ -25,7 +25,7 @@ library(patchwork)
 library(sf)
 
 # Load clean dataset
-clean_dataset <- read_csv(here("outputs/data/cleaned_dinesafe_data.csv"))
+clean_dataset <- read_csv(here("outputs/data/cleaned_DineSafe_data.csv"))
 
 # Load ward map
 ward_map <- st_read(here("inputs/data/ward_map_data.geojson"))
@@ -33,83 +33,68 @@ ward_map <- st_read(here("inputs/data/ward_map_data.geojson"))
 
 
 # Introduction
-Toronto is a city bustling with many different cultures mixed together. With many cultures, there are many restaurants in toronto. In GTA, there are around 17000 restaurants that are operating. Restaurants give the owners ability to express their cultural and culinary creativity to almost 30 million people of Toronto, and more to those who comes from outside of the city. Being a cultural hub and home to a variety of restaurants also mean it is a challenge to keep a consistent health standard for every restaurant. And the number of restaurants growing [TODO:ADD CITATION], Toronto needed a system to keep all the restaurants safe for the customers to eat in.
+Toronto is a city bustling with many different cultures mixed together. With many cultures, there are many restaurants in toronto. In GTA, there are around 17000 restaurants that are operating. Restaurants give the owners ability to express their cultural and culinary creativity to almost 3 million people in the city of Toronto, and 6 million people in Greater Toronto Area [@torontoPops]. Being a cultural hub and home to a variety of restaurants also means it is a challenge to keep a consistent health standard for every restaurant.
 
-Dinesafe program is ran by Toronto Public Health, and it runs randomized inspections for restaurants or any establishments that serve food to the general public. Dinesafe inspections occur anywhere from once per year to 3 times per year, depending on whether the establishment is serving food that can possibly carry pathogenic organisms, or is serving food to a population that is high risk, such as hospital patients [TODO:ADD CITATION]. There are 3 possible results to a Dinesafe inspection. One can get a PASS, which indicate no or only minor infractions were found, or a CONDITIONAL PASS, meaning one or more significant infraction was observed, or a CLOSED, meaning one or more crucial infractions were found. For example, if an establishment were found to have 2 minor infractions and 1 crucial infraction, then they will be notified to close the establishment until the issue is fixed. Until a PASS re-inspection, they cannot reopen the establishment. Conditional pass means the establishment will be revisited in the near future, and all of the significant infractions must be fixed by then. These notices must be posted near the entrance of the restaurant, visible for anyone who enters the premise [TODO: ADD CITATION].
+DineSafe program is ran by Toronto Public Health, and it runs randomized inspections for restaurants or any establishments that serve food to the general public. DineSafe inspections occur anywhere from once per year to 3 times per year, depending on whether the establishment is serving food that can possibly carry pathogenic organisms, or is serving food to a population that is high risk, such as hospital patients [@citeTPHDineSafe]. There are 3 possible results to a DineSafe inspection. One can get a PASS, which indicate no or only minor infractions were found, or a CONDITIONAL PASS, meaning one or more significant infraction was observed, or a CLOSED, meaning one or more crucial infractions were found. For example, if an establishment were found to have 2 minor infractions and 1 crucial infraction, then they will be notified to close the establishment until the issue is fixed. Until a PASS re-inspection, they cannot reopen the establishment. Conditional pass means the establishment will be revisited in the near future, and all of the significant infractions must be fixed by then. These notices must be posted near the entrance of the restaurant, visible for anyone who enters the premise [TODO: ADD CITATION].
 
-In this paper, we will analyze Dinesafe inspection data to see whether there are correlating factors which play into the inspection result of these establishments. This paper will be organized into these following sections: Data, Results, Discussion, and Conclusion. Data section will focus on how the data was obtained and what steps we took to clean the data. Results section will use the data and use various graphs and tables to showcase our data. Discussion section will point out our findings and how we performed the analysis, and the possible shortcomings for the analysis we have done.
+In this paper, we will analyze DineSafe inspection data to see whether there are correlating factors which play into the inspection result of these establishments. This paper will be organized into these following sections: Data, Results, Discussion, and Conclusion. Data section will focus on how the data was obtained and what steps we took to clean the data. Results section will use the data and use various graphs and tables to showcase our data. Discussion section will point out our findings and how we performed the analysis, and the possible shortcomings for the analysis we have done.
 
 
 # Data {#sec-data}
 
 All data was obtained by using Toronto's `opendatatoronto` R library [@citeOpendatatoronto]. Toronto hosts its open data portal [website](https://open.toronto.ca/), where everyone can search and explore hundreds of datasets related to Toronto. We can use R statistical programming language [@citeR] with `opendatatoronto` library to download the datasets into R directly. We used R statistical programming language [@citeR] along with `openxlsx` [@citeOpenxlsx], `tidyverse` [@citeTidyverse], `sf` [@citeSf] , `here` [@citeHere], `knitr` [@citeKnitr],  `patchwork` [@citePatchwork] libraries to help save, process, then visualize the raw data. All the code was written within RStudio [@citeRStudio].
 
-## Dinesafe Data
+## DineSafe Data
 
-Dinesafe dataset is published by Toronto Public Health (or TPH) [TODO: CITE TPH]. This dataset contains every inspection results, such as the location of the establishment in longitude and latitude, infraction severity (if any), and the date which the inspection was performed. There are around 77000 rows, meaning there are 77000 inspection which we can analyze over as of January 21st, 2024. This dataset is updated daily. The date when the raw data was obtained for the project was on January 21st, 2024, and open data portal states that the dataset was last refreshed on Janurary 21st, 2024. The data was given in a csv file, and we used `write_csv` function to save the raw data. Dinesafe dataset contains inspections from January 20th, 2022 to January 19th, 2024. 
+DineSafe dataset is published by Toronto Public Health (or TPH) [@citeTPHDineSafe]. This dataset contains every inspection results, such as the location of the establishment in longitude and latitude, infraction severity (if any), and the date which the inspection was performed. There are around 77000 rows, meaning there are 77000 inspection which we can analyze over as of January 21st, 2024. This dataset is updated daily. The date when the raw data was obtained for the project was on January 21st, 2024, and open data portal states that the dataset was last refreshed on Janurary 21st, 2024. The data was given in a csv file, and we used `write_csv` function to save the raw data. DineSafe dataset contains inspections from January 20th, 2022 to January 19th, 2024. 
 
 ## Ward Bounds Data
 
-City of Toronto is divided into 25 wards as of January 21st, 2024. This dataset is a map of all the wards in the City of Toronto, and is published by the City Clerk's Office. It is updated semi-annually, and was last updated on Jan 1st, 2024. This map data was given in a geojson format. The dataset allows us to query location with a longitude and a latitude and let us see which ward that location is in. We use this data to query which ward this establishment was located in. Details on how this was done will be in @sec-combining-datasets. A sample of what Ward Bounds data looks like is shown in @fig-ward-map-visualization.
-
-\newpage
+City of Toronto is divided into 25 wards as of January 21st, 2024. This dataset is a map of all the wards in the City of Toronto, and is published by the City Clerk's Office. It is updated semi-annually, and was last updated on Jan 1st, 2024. This map data was given in a geojson format. The dataset allows us to query location with a longitude and a latitude and let us see which ward that location is in.
 
 ## Ward Profile Data
 
-This dataset contains 2021 Census data and summarizes them into 25 wards. This dataset was last refreshed on Jan 3rd, 2024, and was accessed for use on Jan 21st, 2024. We will only be using the Median income of the wards from this dataset.
+This dataset contains 2011, 2016, and 2021 Census data and summarizes them into Toronto's 25 wards. This dataset was last refreshed on Jan 3rd, 2024, and was accessed for use on Jan 21st, 2024. We will only be using the Median household income of the wards from 2021 Census from this dataset. We decided to use 2021 Census data as it is the latest data available to us. Using older census data means we are using very recent DineSafe infraction data with misrepresented economic status of those wards. 
 
-## Combining and Cleaning Datasets {#sec-combining-datasets}
-
-There are a lot of detailed information which we do not need for our purposes. We only want restaurant's name, severity of infractions, the ward where the restaurant is located in, and that ward's median income. To do this, we first use `filter` function from `tidyverse` [TODO: CITE TIDYVERSE] on the ward census dataset to filter out the row which contained median income for each ward, and save it as a vector so the first element is the median income for ward 1, and second element for ward 2 and so on. This allows us to simply query what the median income is for a certain ward. We also make a custom function which will take in coordinate and spits out which ward the coordinate is located in. 
-
-Using these two things, we can start assembling our final dataset. First, we observed that some inspection's severity was marked as "`NA - Not Applicable`", and some were values `NA` which means that cell is completely empty. We keep the consistency by using the `mutate` function and changing every occurrence of "`NA - Not Applicable`" to `NA`. We use `mutate` again to add a `ward` column to the table, using `Map` function to apply the ward-finding function for each row's longitude-latitude combo. Then, using the median income info, we add another column using `mutate` to add in that ward's median income for every row. Then, we use the `select` function to select only the columns we want and save the cleaned data into a csv. @tbl-sample-cleaned-dataset is a sample of the cleaned dataset.
+## Combined Data
+We combined DineSafe dataset and ward profile data to produce a combined dataset. The combined dataset contains these columns: establishment's name, DineSafe infraction severity, the ward which the establishment is located in, and median household income of that ward. 
 
 # Results
 
-## Worst Dinesafe Infraction Per Restaurant
+## Worst DineSafe Infraction Per Restaurant
 
-When we obtained the Dinesafe dataset (Jan 21st, 2024), there are 76,827 Dinesafe inspections across 13,936 different restaurants. Of those inspections, 32,227 inspections did not have any infractions, meaning around 42% of inspections passed without minor, significant, or crucial infractions. Out of 13,936 restaurants, about 6,057 restaurants did not have any infractions, 2,816 had Minor infractions at worst, 3,872 had Significant infractions at worst, and 1,191 restaurants had crucial infractions. @Tbl-restaurants-infractin-ratio shows this with the percentages compared to all restaurants. On average, there were 3.2 total infractions, 2.01 minor infractions, 1.03 significant infractions, 0.157 crucial infractions per restaurant. The standard deviation for average number of all infractions is 2.57.
+When we obtained the DineSafe dataset (Jan 21st, 2024), there are 76,827 DineSafe inspections across 13,936 different restaurants. Of those inspections, 32,227 inspections did not have any infractions, meaning around 42% of inspections passed without minor, significant, or crucial infractions. Out of 13,936 restaurants, about 6,057 restaurants did not have any infractions, 2,816 had Minor infractions at worst, 3,872 had Significant infractions at worst, and 1,191 restaurants had crucial infractions. @Tbl-restaurants-infractin-ratio shows this with the percentages compared to all restaurants. On average, there were 3.2 total infractions, 2.01 minor infractions, 1.03 significant infractions, 0.157 crucial infractions per restaurant. The standard deviation for average number of all infractions is 2.57.
 
 ```{r}
 #| label: tbl-restaurants-infractin-ratio
-#| tbl-cap: Count and Percentage of Different Worst Infraction by Restaurant
+#| tbl-cap: Count of Restaurants' Worst Infraction In Toronto
 #| echo: false
 #| warning: false
 #| message: false
 
-cuts_chr <- c(
-  "0% to 9%",
-  "10% to 19%",
-  "20% to 29%",
-  "30% to 39%",
-  "40% to 49%",
-  "50% to 59%",
-  "60% to 69%",
-  "70% to 79%",
-  "80% to 89%",
-  "90% to 100%"
-)
+# 
 infractions_per_restaurant <-clean_dataset |>
   group_by(restaurant) |>
   summarize(
-    minor_infractions = any(dinesafe_infraction == "M - Minor"),
-    significant_infractions = any(dinesafe_infraction == "S - Significant"),
-    cruicial_infractions = any(dinesafe_infraction == "C - Crucial")
+    minor_infractions = any(DineSafe_infraction == "M - Minor"),
+    significant_infractions = any(DineSafe_infraction == "S - Significant"),
+    cruicial_infractions = any(DineSafe_infraction == "C - Crucial")
   ) |>
   mutate_all(~replace(., is.na(.), FALSE))
 
+# Column variables
 n <- nrow(infractions_per_restaurant)
 mi <- infractions_per_restaurant$minor_infractions
 si <- infractions_per_restaurant$significant_infractions
 cr <- infractions_per_restaurant$cruicial_infractions
 
 totals <- tibble(
-  smt = c("Count", "Percent"),
-  all_restaurants = c(n, "100%"),
-  no_infraction = c(sum(!mi & !si & !cr), paste(round(sum(!mi & !si & !cr) / n * 100, digits = 2), "%")),
-  minor_infraction = c(sum(mi & !si & !cr), paste(round(sum(mi & !si & !cr) / n * 100, digits = 2), "%")),
-  sig_infraction = c(sum(si & !cr), paste(round(sum(si & !cr) / n * 100, digits = 2), "%")),
-  cruicial_infraction = c(sum(cr), paste(round(sum(cr) / n * 100, digits = 2), "%"))
+  rows = c("Count"),
+  all_restaurants = c(n),
+  no_infraction = c(sum(!mi & !si & !cr)),
+  minor_infraction = c(sum(mi & !si & !cr)),
+  sig_infraction = c(sum(si & !cr)),
+  cruicial_infraction = c(sum(cr))
 ) 
   
 
@@ -127,14 +112,15 @@ kable(
 ```
 
 
-## Dinesafe Infractions Per Ward
+## DineSafe Infractions Per Ward
 
 We can use `sf` package to visualize what percentage of inspections led to an infraction for each ward. Ward Eglinton-Lawrence (Ward 8) had the highest rate of all infractions, nearly 81% of inspection leading into some kind of infraction. Etobicoke-Lakeshore (Ward 3) had the lowest rate of all infractions, only 34% of all inspections having an infraction. As for Minor infractions, Eglinton-Lawrence had the highest rate, 49% of inspections leading to a minor infraction, and Scarborough-Rouge Park (Ward 25) had the lowest rate with 21% of inspections observing a minor infraction. For Significant infractions, Eglinton-Lawrence had the highest rate with 27%, and Etobicoke-Lakeshore had the lowest with 7%. Lastly, Scarborough North (Ward 23) had the highest rate of crucial infractions with 5.8%, and Etobicoke Centre (Ward 2) had the lowest rate of crucial infraction with 0.8%. Refer to @fig-infractions-per-ward for a map visualizing this data.
 
 ```{r}
 #| label: fig-infractions-per-ward
-#| fig-cap: Infraction Percentage for Each Ward
+#| fig-cap: Infraction Percentage for Each Ward from 2022 to 2024
 #| fig-height: 8
+#| fig-width: 8
 #| echo: false
 #| warning: false
 #| message: false
@@ -143,10 +129,10 @@ We can use `sf` package to visualize what percentage of inspections led to an in
 ward_summary <- clean_dataset |>
   group_by(ward) |>
   summarize(
-    all_infractions_ratio = mean(!is.na(dinesafe_infraction)),
-    minor_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "M - Minor"),
-    sig_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "S - Significant"),
-    crucial_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "C - Crucial")
+    all_infractions_ratio = mean(!is.na(DineSafe_infraction)),
+    minor_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "M - Minor"),
+    sig_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "S - Significant"),
+    crucial_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "C - Crucial")
   ) |>
   mutate(ward = sprintf("%02d", ward)) # https://stackoverflow.com/a/8267036
 
@@ -189,10 +175,10 @@ crucial <- ggplot(combined) +
         plot.title = element_text(size = 10)) +
   labs(title = "Crucial Infractions", fill = "Infraction Rate")
 
-wrap_plots(all, minor, sig, crucial, ncol = 1, widths = c(2))
+wrap_plots(all, minor, sig, crucial, ncol = 1, widths = c(2,2))
 ```
 
-## Dinesafe Infractions Versus Ward Income
+## DineSafe Infractions Versus Ward Income
 
 We created @fig-infractions-vs-ward-income to see whether there are any relationship between infraction occurrence rate and ward income, but there doesn't seem to be a clear trend for all 4 scatter plots which highlight all, minor, significant, and crucial infraction rates versus ward income for which those infractions were found at. @Tbl-income-infraction-correlation contains the correlation between ward income and various infraction types, and it shows very little correlation, strongest correlation coefficient being 0.15. 
 
@@ -210,10 +196,10 @@ We created @fig-infractions-vs-ward-income to see whether there are any relation
 median_ward_summary <- clean_dataset |>
   group_by(ward, median_ward_income) |>
   summarize(
-    all_infractions_ratio = mean(!is.na(dinesafe_infraction)),
-    minor_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "M - Minor"),
-    sig_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "S - Significant"),
-    crucial_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "C - Crucial")
+    all_infractions_ratio = mean(!is.na(DineSafe_infraction)),
+    minor_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "M - Minor"),
+    sig_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "S - Significant"),
+    crucial_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "C - Crucial")
   )
 
 make_median_ward_plot <- function(infraction_type) {
@@ -267,10 +253,10 @@ pa + pm + ps + pc + plot_layout(widths = c(2, 2))
 median_ward_summary <- clean_dataset |>
   group_by(ward, median_ward_income) |>
   summarize(
-    all_infractions_ratio = mean(!is.na(dinesafe_infraction)),
-    minor_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "M - Minor"),
-    sig_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "S - Significant"),
-    crucial_infractions_ratio = mean(!is.na(dinesafe_infraction) & dinesafe_infraction == "C - Crucial")
+    all_infractions_ratio = mean(!is.na(DineSafe_infraction)),
+    minor_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "M - Minor"),
+    sig_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "S - Significant"),
+    crucial_infractions_ratio = mean(!is.na(DineSafe_infraction) & DineSafe_infraction == "C - Crucial")
   )
 
 median_ward_correlation_data <- tibble(
@@ -289,50 +275,37 @@ kable(
 
 # Discussion
 
-## Number of Restaurants with Dinesafe Infractions
+## Number of Restaurants with DineSafe Infractions
 From @tbl-restaurants-infractin-ratio, we can observe that nearly 10% of all establishments in Toronto has caused at least one crucial infraction, meaning establishments would have to close until the problem was fixed. This is somewhat worrying as that would mean one in 10 restaurants have been found of a crucial infraction which could cause illnesses. 
 
-There were surprisingly more establishments which have been found to have significant infractions at worst than minor infractions. This could be because those restaurants who have an infraction at all would have more than one infraction, one of them being significant, rather than having a sigular minor infraction. Or, it could be that some inspectors focused more on significant infractions rather than minor ones, as minor infractions do not affect what Dinesafe result the restaurant gets. It is only when an establishment gets a significant or worse infraction which they get a conditional pass or a closed notice. Thus these inspectors are more focused on finding significant or crucial infractions.
+There were surprisingly more establishments which have been found to have significant infractions at worst than minor infractions. This could be because those restaurants who have an infraction at all would have more than one infraction, one of them being significant, rather than having a sigular minor infraction. Or, it could be that some inspectors focused more on significant infractions rather than minor ones, as minor infractions do not affect what DineSafe result the restaurant gets. It is only when an establishment gets a significant or worse infraction which they get a conditional pass or a closed notice. Thus these inspectors are more focused on finding significant or crucial infractions.
 
-## Dinesafe Infraction and Wards
+## DineSafe Infraction and Wards
 Looking at maps from @fig-infractions-per-ward, there seems to be a some sort of trend of where there were the highest infractions rates. For all infraction, it seems like wards that are close to the center of Toronto has higher general infraction rate than the outer wards. This could possibly be that these establishments are actually causing more infractions, or it could be that inspectors in that area could be stricter than those inspectors who inspect establishments in the outer wards. Another possibility could be that there are not that many establishments which serve hazardous food, and those establishment which don't serve possibly hazardous food are not inspected to the same standard as those who do.
 
 As we look at different infraction severities however, it seems like the east side of the city causes more severe infraction compared to the west side. One could interpret this as the wards in the east side causing less infractions in numbers, but each infractions are more severe in the east. Again, this could be linked to any of the reasons stated previously, or it could be that mice/insect infestations occur more frequently in the eastern region of the city. Or, it could be that establishments in the eastern region have older buildings which are vulnerable to insects and rodent infestation. 
 
-## Dinesafe Infraction and Ward Income
-There doesn't seem to be a clear correlation between Dinesafe Infractions and a ward's median income. This is evident looking at @tbl-income-infraction-correlation and @fig-infractions-vs-ward-income, the correlation coefficient is positive or negative depending on which severity of infraction we look at, and the data points are very spread out. Therefore the ward's median income is not a good indicator of Dinesafe infraction rates.
+## DineSafe Infraction and Ward Income
+There doesn't seem to be a clear correlation between DineSafe Infractions and a ward's median income. This is evident looking at @tbl-income-infraction-correlation and @fig-infractions-vs-ward-income, the correlation coefficient is positive or negative depending on which severity of infraction we look at, and the data points are very spread out. Therefore the ward's median income is not a good indicator of DineSafe infraction rates.
 
-We observed the relationship between the ward income and Dinesafe infraction because we thought there would be higher end establishments which can afford more experienced staff and equipment to clean their establishments better, possibly passing more Dinesafe inspections without infractions. Clearly this does not seem to be the case. It could be that wards are too big, and it includes too many neighbourhoods thus containing restaurants from many variety of quality. 
+We observed the relationship between the ward income and DineSafe infraction because we thought there would be higher end establishments which can afford more experienced staff and equipment to clean their establishments better, possibly passing more DineSafe inspections without infractions. Clearly this does not seem to be the case. It could be that wards are too big, and it includes too many neighbourhoods thus containing restaurants from many variety of quality. 
 
 ## Weaknesses and next steps
 
-Dinesafe inspections are done by numerous inspectors, and different inspectors will be better at pointing out infraction than others. This means using Dinesafe infractions to decide which restaurants are the cleanest, and which wards have the cleanest restaurants may not be the most appropriate. Not only that, there can be a seasonal difference too. For example, mice infestations are the most common during fall and winter season [TODO: ADD SOURCE HERE]. Meaning if an inspection was done in fall or winter rather than spring or summer, an establishment might have a higher chance of getting caught with mice infestation. Having any kind of mice infestation leads to a closed notice, as it is a crucial infraction [TODO: Add archive.org page about this]. Also, ward income data is a snapshot of 2021 census data, meanwhile Dinesafe dataset only contains inspection from January 20th, 2022 to January 19th, 2022. Therefore there is a discrepancy between those datasets for when the data was collected.
+DineSafe inspections are done by numerous inspectors, and different inspectors will be better at pointing out infraction than others. This means using DineSafe infractions to decide which restaurants are the cleanest, and which wards have the cleanest restaurants may not be the most appropriate. Not only that, there can be a seasonal difference too. For example, mice infestations are the most common during fall and winter season [TODO: ADD SOURCE HERE]. Meaning if an inspection was done in fall or winter rather than spring or summer, an establishment might have a higher chance of getting caught with mice infestation. Having any kind of mice infestation leads to a closed notice, as it is a crucial infraction [TODO: Add archive.org page about this]. Also, ward income data is a snapshot of 2021 census data, meanwhile DineSafe dataset only contains inspection from January 20th, 2022 to January 19th, 2022. Therefore there is a discrepancy between those datasets for when the data was collected.
 
-For future researches, sub-dividing wards into smaller neighbourhoods can allows us to pinpoint a clearer trend between Dinesafe infractions and that neighbourhood's income. This could mitigate the problem with wards being too big and including too many variety of restaurants. We can also divide the restaurants into 3 categories: high-end, middle-end, low-end depending on the average price of the menu items in the restaurant, and see whether there is a clear trend between the quality of the establishments and Dinesafe infraction rates. 
+For future researches, sub-dividing wards into smaller neighbourhoods can allows us to pinpoint a clearer trend between DineSafe infractions and that neighbourhood's income. This could mitigate the problem with wards being too big and including too many variety of restaurants. We can also divide the restaurants into 3 categories: high-end, middle-end, low-end depending on the average price of the menu items in the restaurant, and see whether there is a clear trend between the quality of the establishments and DineSafe infraction rates. 
 
 \newpage
 
 \appendix
 
 # Appendix {-}
+# Combining and Cleaning Datasets {#sec-combining-datasets}
 
-# Ward Map Visualization
-```{r}
-#| label: fig-ward-map-visualization
-#| fig-cap: Visualization of Ward Map Data
-#| echo: false
-#| results: false
-#| warning: false
-#| message: false
+There are a lot of detailed information which we do not need for our purposes. We only want restaurant's name, severity of infractions, the ward where the restaurant is located in, and that ward's median income. To do this, we first use `filter` function from `tidyverse` [TODO: CITE TIDYVERSE] on the ward census dataset to filter out the row which contained median income for each ward, and save it as a vector so the first element is the median income for ward 1, and second element for ward 2 and so on. This allows us to simply query what the median income is for a certain ward. We also make a custom function which will take in coordinate and spits out which ward the coordinate is located in. 
 
-ggplot() +
-  theme_classic() +
-  geom_sf(data = ward_map) +
-  labs(
-    x = "Longitude",
-    y = "Latitude"
-  )
-```
+Using these two things, we can start assembling our final dataset. First, we observed that some inspection's severity was marked as "`NA - Not Applicable`", and some were values `NA` which means that cell is completely empty. We keep the consistency by using the `mutate` function and changing every occurrence of "`NA - Not Applicable`" to `NA`. We use `mutate` again to add a `ward` column to the table, using `Map` function to apply the ward-finding function for each row's longitude-latitude combo. Then, using the median income info, we add another column using `mutate` to add in that ward's median income for every row. Then, we use the `select` function to select only the columns we want and save the cleaned data into a csv. @tbl-sample-cleaned-dataset is a sample of the cleaned dataset.
 
 # Cleaned Data Sample
 
@@ -347,7 +320,7 @@ kable(
   head(clean_dataset),
   col.names = c(
     "Restaurant",
-    "Dinesafe Infraction",
+    "DineSafe Infraction",
     "Ward",
     "Ward Median Income"
   )

@@ -1,3 +1,6 @@
+ChatGPT 3.5
+Jan 22nd, 2024
+
 User
 How do i write a program in r which checks whether a latitude longitude coordinate falls on a shape in geojson?
 ChatGPT
