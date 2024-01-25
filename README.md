@@ -2,7 +2,7 @@
 
 ## Overview
 
-This paper aims to find out the relationship between Dinesafe infractions and different ward in Toronto.
+This paper aims to find out the relationship between DineSafe infractions and different wards in Toronto. We have found that while there is near-zero correlation between the ward's median houshold income and DineSafe infraction proportion, we did find that wards on the eastern end of the city commit more crucial infraction while the wards in the center of Toronto commit more minor to signficant infractions.
 
 ## File Structure
 
